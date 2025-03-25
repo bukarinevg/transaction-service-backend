@@ -10,16 +10,23 @@ class PaymentController extends Controller
 {
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'payment_id' => 'required|uuid|unique:payments,payment_id',
-            'project_id' => 'required|exists:projects,id',
-            'details' => 'required|string',
-            'amount' => 'required|numeric',
-            'currency' => 'required|string|size:3',
-            'status' => 'required|in:Оплачен,Не оплачен',
-        ]);
 
-        return Payment::create($data);
+        try {
+            $data =  $request->validate([
+                'project_id' => 'required|exists:projects,id',
+                'details' => 'required|string',
+                'amount' => 'required|numeric',
+                'currency' => 'required|string|size:3',
+                'status' => 'required|in:Оплачен,Не оплачен',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Validation failed', 'error' => $e->getMessage()], 400);
+        }
+
+        $data['payment_id'] = (string) \Illuminate\Support\Str::uuid();
+        $payment = Payment::create($data);
+
+        return response()->json(['payment' => $payment], 201);
     }
 
     public function index()

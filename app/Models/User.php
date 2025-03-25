@@ -46,6 +46,19 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected static function booted()
+    {
+        parent::booted();
+
+        static::created(function ($user) {
+            $user->balance()->create([
+                'balance_rub' => 0,
+                'balance_usd' => 0,
+                'balance_kzt' => 0,
+            ]);
+        });
+    }
+
     public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
