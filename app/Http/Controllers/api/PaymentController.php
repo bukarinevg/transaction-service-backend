@@ -38,33 +38,20 @@ class PaymentController extends Controller
     {
         $query = Payment::with('project', 'project.user');
 
-        // Поиск по payment_id
-        if ($request->filled('payment_id')) {
-            $query->where('payment_id', 'like' , "%{$request->payment_id}%");   
+        $filters = [
+            'payment_id' => fn($q, $value) => $q->where('payment_id', 'like', "%{$value}%"),
+            'details' => fn($q, $value) => $q->where('details', 'like', "%{$value}%"),
+            'email' => fn($q, $value) => $q->whereHas('project.user', fn($q) => $q->where('email', 'like', "%{$value}%")),
+            'currency' => fn($q, $value) => $q->where('currency', '=', $value),
+            'project_id' => fn($q, $value) => $q->where('project_id', '=', $value),
+        ];
+
+        foreach ($filters as $field => $filter) {
+            if ($request->filled($field)) {
+                $filter($query, $request->input($field));
+            }
         }
-    
-        // Поиск по реквизитам
-        if ($request->filled('details')) {
-            $query->where('details', 'like', "%{$request->details}%");
-        }
-    
-        // Поиск по логину пользователя через project → user
-        if ($request->filled('email')) {
-            $query->whereHas('project.user', function ($q) use ($request) {
-                $q->where('email', 'like', "%{$request->email}%");
-            });
-        }
-    
-        // Фильтр по валюте
-        if ($request->filled('currency')) {
-            $query->where('currency', '=', $request->currency);
-        }
-    
-        // Фильтр по проекту
-        if ($request->filled('project_id')) {
-            $query->where('project_id', '=', $request->project_id);
-        }
-    
-        return $query->orderByDesc('created_at')->paginate(10);
+
+        return $query->orderByDesc('id')->paginate(10);
     }
 }
