@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Http\Controllers\Controller;
+use App\Services\PaymentService;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, PaymentService $service)
     {
-
         try {
-            $data =  $request->validate([
+            $data = $request->validate([
                 'project_id' => 'required|exists:projects,id',
                 'details' => 'required|string',
                 'amount' => 'required|numeric',
@@ -23,15 +24,18 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Validation failed', 'error' => $e->getMessage()], 400);
         }
 
-        $data['payment_id'] = (string) \Illuminate\Support\Str::uuid();
-        $payment = Payment::create($data);
+        $data['payment_id'] = (string) Str::uuid();
 
-        return response()->json(['payment' => $payment], 201);
+        try {
+            $payment = $service->createWithBalance($data);
+            return response()->json(['payment' => $payment], 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Payment failed', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function index()
     {
         return Payment::with('project')->get();
     }
-    
 }

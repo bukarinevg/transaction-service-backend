@@ -33,5 +33,8 @@ return [
     'hmac' => [
         'key' => env('HMAC_SECRET_KEY'),
     ],
+    'external_balance_api' => [
+        'url' => env('EXTERNAL_BALANCE_API'),
+    ]
 
 ];

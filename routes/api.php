@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 */
 
 
+// User registration and login routes
 Route::post('/register', function (Request $request) {
     try {
         $fields = $request->validate([
@@ -44,7 +45,6 @@ Route::post('/register', function (Request $request) {
     }
 });
 
-
 Route::post('/login', function (Request $request) {
     try {
         $fields = $request->validate([
@@ -67,19 +67,21 @@ Route::post('/login', function (Request $request) {
     }
 });
 
-
+// User logout route
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     $request->user()->tokens()->delete();
     return response()->json(['message' => 'Logged out']);
 });
 
 
+// Protected routes
 try{
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::get('/payments', [PaymentController::class, 'index']);
+        //verify HMAC middleware
         Route::post('/payments', [PaymentController::class, 'store'])->middleware('verify.hmac');
     });
 }
