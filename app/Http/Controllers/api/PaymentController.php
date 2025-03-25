@@ -34,8 +34,37 @@ class PaymentController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return Payment::with('project')->get();
+        $query = Payment::with('project', 'project.user');
+
+        // Поиск по payment_id
+        if ($request->filled('payment_id')) {
+            $query->where('payment_id', 'like' , "%{$request->payment_id}%");   
+        }
+    
+        // Поиск по реквизитам
+        if ($request->filled('details')) {
+            $query->where('details', 'like', "%{$request->details}%");
+        }
+    
+        // Поиск по логину пользователя через project → user
+        if ($request->filled('email')) {
+            $query->whereHas('project.user', function ($q) use ($request) {
+                $q->where('email', 'like', "%{$request->email}%");
+            });
+        }
+    
+        // Фильтр по валюте
+        if ($request->filled('currency')) {
+            $query->where('currency', '=', $request->currency);
+        }
+    
+        // Фильтр по проекту
+        if ($request->filled('project_id')) {
+            $query->where('project_id', '=', $request->project_id);
+        }
+    
+        return $query->orderByDesc('created_at')->paginate(10);
     }
 }
