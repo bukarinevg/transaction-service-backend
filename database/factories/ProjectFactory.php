@@ -14,7 +14,7 @@ class ProjectFactory extends Factory
     {
         return [
             'name' => $this->faker->sentence(5),
-            'user_id' => $this->faker->numberBetween(5, 10),
+            'user_id' => $this->faker->numberBetween(1, 10),
         ];
     }
 }

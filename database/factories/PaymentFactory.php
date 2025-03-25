@@ -19,7 +19,7 @@ class PaymentFactory extends Factory
             'project_id' => $this->faker->numberBetween(1, 10),
             'details' => $this->faker->sentence(),
             'amount' => $this->faker->randomFloat(2, 10, 1000),
-            'currency' => $this->faker->currencyCode(),
+            'currency' => $this->faker->randomElement(['USD', 'KZT', 'RUB']),
             'status' => $this->faker->randomElement(['Оплачен', 'Не оплачен']),
         ];
     }
