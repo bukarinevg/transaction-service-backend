@@ -3,10 +3,11 @@
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\api\ProjectController;
+use App\Http\Controllers\api\PaymentController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,50 +20,75 @@ use Illuminate\Support\Facades\Hash;
 |
 */
 
+
 Route::post('/register', function (Request $request) {
-    $fields = $request->validate([
-        'login' => 'required|string|unique:users,login',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:6',
-    ]);
+    try {
+        $fields = $request->validate([
+            'name' => 'required|string|unique:users,name',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+        ]);
 
-    $user = User::create([
-        'login' => $fields['login'],
-        'email' => $fields['email'],
-        'password' => bcrypt($fields['password']),
-    ]);
+        $user = User::create([
+            'name' => $fields['name'],
+            'email' => $fields['email'],
+            'password' => bcrypt($fields['password']),
+        ]);
 
-    $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('api-token')->plainTextToken;
 
-    return response()->json(['token' => $token, 'user' => $user]);
+        return response()->json(['token' => $token, 'user' => $user]);
+    } catch (\Exception $e) {
+        Log::error('User registration failed', ['error' => $e->getMessage()]);
+        return response()->json(['message' => 'User registration failed', 'error' => $e->getMessage()], 400);
+    }
 });
+
 
 Route::post('/login', function (Request $request) {
-    $fields = $request->validate([
-        'login' => 'required|string',
-        'password' => 'required|string',
-    ]);
+    try {
+        $fields = $request->validate([
+            'email' => 'required|email', 
+            'password' => 'required|string',
+        ]);
 
-    $user = User::where('login', $fields['login'])->first();
+        $user = User::where('email', $fields['email'])->first();
 
-    if (!$user || !Hash::check($fields['password'], $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
+        if (!$user || !Hash::check($fields['password'], $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json(['token' => $token, 'user' => $user]);
+    } catch (\Exception $e) {
+        Log::error('User login failed', ['error' => $e->getMessage()]);
+        return response()->json(['message' => 'User login failed', 'error' => $e->getMessage()], 400);
     }
-
-    $token = $user->createToken('api-token')->plainTextToken;
-
-    return response()->json(['token' => $token, 'user' => $user]);
 });
+
 
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     $request->user()->tokens()->delete();
     return response()->json(['message' => 'Logged out']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/projects', [ProjectController::class, 'index']);
-    Route::post('/projects', [ProjectController::class, 'store']);
-    Route::get('/payments', [PaymentController::class, 'index']);
-    Route::post('/payments', [PaymentController::class, 'store']);
+
+try{
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/projects', [ProjectController::class, 'index']);
+        Route::post('/projects', [ProjectController::class, 'store']);
+        Route::get('/payments', [PaymentController::class, 'index']);
+        Route::post('/payments', [PaymentController::class, 'store']);
+    });
+}
+catch (\Exception $e) {
+    Log::error('Route error', ['error' => $e->getMessage()]);
+    return response()->json(['message' => 'Route error', 'error' => $e->getMessage()], 400);
+};
+
+
+Route::fallback(function(){
+    return response()->json(['message' => 'Route not found or unauthorized access'], 404);
 });

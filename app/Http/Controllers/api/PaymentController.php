@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\Project;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -26,4 +26,5 @@ class PaymentController extends Controller
     {
         return Payment::with('project')->get();
     }
+    
 }
