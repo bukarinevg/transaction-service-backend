@@ -7,6 +7,8 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Str;
+use App\Exports\PaymentsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PaymentController extends Controller
 {
@@ -38,20 +40,13 @@ class PaymentController extends Controller
     {
         $query = Payment::with('project', 'project.user');
 
-        $filters = [
-            'payment_id' => fn($q, $value) => $q->where('payment_id', 'like', "%{$value}%"),
-            'details' => fn($q, $value) => $q->where('details', 'like', "%{$value}%"),
-            'email' => fn($q, $value) => $q->whereHas('project.user', fn($q) => $q->where('email', 'like', "%{$value}%")),
-            'currency' => fn($q, $value) => $q->where('currency', '=', $value),
-            'project_id' => fn($q, $value) => $q->where('project_id', '=', $value),
-        ];
-
-        foreach ($filters as $field => $filter) {
-            if ($request->filled($field)) {
-                $filter($query, $request->input($field));
-            }
-        }
+        $query = Payment::applyFilters($query);
 
         return $query->orderByDesc('id')->paginate(10);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(new PaymentsExport($request), 'payments.xlsx');
     }
 }

@@ -83,6 +83,7 @@ try{
         Route::get('/payments', [PaymentController::class, 'index']);
         //verify HMAC middleware
         Route::post('/payments', [PaymentController::class, 'store'])->middleware('verify.hmac');
+        Route::get('/payments/export', [PaymentController::class, 'export']);
     });
 }
 catch (\Exception $e) {

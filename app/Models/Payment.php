@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-use App\Jobs\NotifyExternalService;
+
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,21 +27,22 @@ class Payment extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public static function applyBalance($payment) : void
+    public static function applyFilters(QueryBuilder | Builder $query): QueryBuilder | Builder
     {
-        $user = $payment->project->user;
+        $filters = [
+            'payment_id' => fn($q, $value) => $q->where('payment_id', 'like', "%{$value}%"),
+            'details' => fn($q, $value) => $q->where('details', 'like', "%{$value}%"),
+            'email' => fn($q, $value) => $q->whereHas('project.user', fn($q) => $q->where('email', 'like', "%{$value}%")),
+            'currency' => fn($q, $value) => $q->where('currency', '=', $value),
+            'project_id' => fn($q, $value) => $q->where('project_id', '=', $value),
+        ];
 
-        $balance = $user->balance()->firstOrCreate([
-            'user_id' => $user->id,
-        ]);
+        foreach ($filters as $field => $filter) {
+            if (request()->filled($field)) {
+                $filter($query, request()->input($field));
+            }
+        }
 
-        match ($payment->currency) {
-            'RUB' => $balance->increment('balance_rub', $payment->amount),
-            'USD' => $balance->increment('balance_usd', $payment->amount),
-            'KZT' => $balance->increment('balance_kzt', $payment->amount),
-            default => null,
-        };
-
-        NotifyExternalService::dispatch($user);
+        return $query;
     }
 }
