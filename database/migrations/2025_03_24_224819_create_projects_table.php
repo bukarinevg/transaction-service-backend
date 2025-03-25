@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
             $table->string('name')->unique();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::create('user_balances', function (Blueprint $table) {
@@ -28,37 +31,17 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
-        Schema::create('project_user', function (Blueprint $table) {
-            $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('user_id');
-
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-
-            $table->primary(['project_id', 'user_id']);
-        });
-
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->uuid('payment_id')->unique();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('project_id');
             $table->string('details');
             $table->decimal('amount', 15, 2);
             $table->string('currency', 3);
             $table->enum('status', ['Оплачен', 'Не оплачен'])->default('Не оплачен');
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
-
-        Schema::create('project_payment', function (Blueprint $table) {
-            $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('payment_id');
-
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            $table->foreign('payment_id')->references('id')->on('payments')->onDelete('cascade');
-
-            $table->primary(['project_id', 'payment_id']);
         });
     }
 
@@ -67,9 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('project_payment');
         Schema::dropIfExists('payments');
-        Schema::dropIfExists('project_user');
         Schema::dropIfExists('user_balances');
         Schema::dropIfExists('projects');
     }
