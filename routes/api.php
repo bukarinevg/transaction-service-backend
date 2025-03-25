@@ -80,7 +80,7 @@ try{
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::get('/payments', [PaymentController::class, 'index']);
-        Route::post('/payments', [PaymentController::class, 'store']);
+        Route::post('/payments', [PaymentController::class, 'store'])->middleware('verify.hmac');
     });
 }
 catch (\Exception $e) {
