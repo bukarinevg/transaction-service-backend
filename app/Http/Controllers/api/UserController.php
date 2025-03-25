@@ -10,4 +10,9 @@ class UserController extends Controller
     {
         return User::with(['projects', 'balance'])->get();
     }
+
+    public function show(User $user)
+    {
+        return $user->load(['projects', 'balance']);
+    }
 }
