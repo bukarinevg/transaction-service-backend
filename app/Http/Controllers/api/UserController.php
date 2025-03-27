@@ -12,8 +12,9 @@ class UserController extends Controller
         return User::with(['projects', 'balance'])->get();
     }
 
-    public function show(User $user)
+    public function show()
     {
+        $user = User::find(auth()->id());
         return $user->load(['projects', 'balance']);
     }
 }
