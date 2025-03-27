@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Login</th>
+            <th>Email</th>
             <th>Project</th>
             <th>Details</th>
             <th>Amount</th>
@@ -14,7 +14,7 @@
         @foreach ($payments as $payment)
             <tr>
                 <td>{{ $payment->payment_id }}</td>
-                <td>{{ $payment->project->user->login ?? '' }}</td>
+                <td>{{ $payment->project->user->email ?? '' }}</td>
                 <td>{{ $payment->project->name }}</td>
                 <td>{{ $payment->details }}</td>
                 <td>{{ $payment->amount }}</td>
