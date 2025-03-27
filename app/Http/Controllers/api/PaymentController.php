@@ -56,7 +56,7 @@ class PaymentController extends Controller
                 'details' => 'sometimes|string',
                 'amount' => 'sometimes|numeric',
                 'currency' => 'sometimes|string|size:3',
-                'status' => 'sometimes|in:Оплачен,Не оплачен',
+                'status' => 'sometimes|in:Оплачен',
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Validation failed', 'error' => $e->getMessage()], 400);
