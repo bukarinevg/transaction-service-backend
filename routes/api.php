@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
 try{
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
-        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::get('/users/view', [UserController::class, 'show']);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::get('/payments', [PaymentController::class, 'index']);
