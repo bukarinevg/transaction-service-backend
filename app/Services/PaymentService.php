@@ -21,14 +21,27 @@ class PaymentService
                     'user_id' => $user->id,
                 ]);
 
-                match (strtoupper($payment->currency)) {
-                    'RUB' => $balance->increment('balance_rub', $payment->amount),
-                    'USD' => $balance->increment('balance_usd', $payment->amount),
-                    'KZT' => $balance->increment('balance_kzt', $payment->amount),
-                };
+                $payment->applyBalance();
 
                 NotifyExternalService::dispatch($user);
             }
+
+            return $payment;
+        });
+    }
+
+    public function updatePayment(Payment $payment, array $data): Payment
+    {
+        return DB::transaction(function () use ($payment, $data) {
+            
+            $statusChanged = isset($data['status']) && $data['status'] === 'Оплачен' && $payment->status !== 'Оплачен';
+  
+            if ($statusChanged) {
+                $payment->status = 'Оплачен';
+                $payment->applyBalance();
+            }
+        
+            $payment->update($data);
 
             return $payment;
         });

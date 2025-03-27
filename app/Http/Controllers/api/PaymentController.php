@@ -39,7 +39,6 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $query = Payment::with('project', 'project.user');
-
         $query = Payment::applyFilters($query);
 
         return $query->orderByDesc('id')->paginate(10);
@@ -48,5 +47,26 @@ class PaymentController extends Controller
     public function export(Request $request)
     {
         return Excel::download(new PaymentsExport($request), 'payments.xlsx');
+    }
+
+    public function update(Request $request, Payment $payment, PaymentService $service)
+    {
+        try {
+            $data = $request->validate([
+                'details' => 'sometimes|string',
+                'amount' => 'sometimes|numeric',
+                'currency' => 'sometimes|string|size:3',
+                'status' => 'sometimes|in:Оплачен,Не оплачен',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Validation failed', 'error' => $e->getMessage()], 400);
+        }
+
+        try {
+            $payment = $service->updatePayment($payment, $data);
+            return response()->json(['payment' => $payment], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Update failed', 'error' => $e->getMessage()], 500);
+        }
     }
 }

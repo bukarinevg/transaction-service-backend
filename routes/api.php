@@ -65,7 +65,7 @@ Route::post('/login', function (Request $request) {
         Log::error('User login failed', ['error' => $e->getMessage()]);
         return response()->json(['message' => 'User login failed', 'error' => $e->getMessage()], 400);
     }
-});
+})->name('login');
 
 // User logout route
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
@@ -84,10 +84,16 @@ try{
         //verify HMAC middleware
         Route::post('/payments', [PaymentController::class, 'store'])->middleware('verify.hmac');
         Route::get('/payments/export', [PaymentController::class, 'export']);
+        Route::patch('/payments/{payment}', [PaymentController::class, 'update']);
     });
 }
 catch (\Exception $e) {
     Log::error('Route error', ['error' => $e->getMessage()]);
+
+    if($e instanceof \Illuminate\Auth\AuthenticationException){
+        return response()->json(['message' => 'Unauthorized access'], 401);
+    }
+
     return response()->json(['message' => 'Route error', 'error' => $e->getMessage()], 400);
 };
 

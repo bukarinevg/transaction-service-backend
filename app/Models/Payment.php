@@ -45,4 +45,22 @@ class Payment extends Model
 
         return $query;
     }
+
+    public function applyBalance(): void
+    {
+        if ($this->status === 'Оплачен') {
+            $user = $this->project->user;
+
+            $balance = $user->balance()->firstOrCreate([
+                'user_id' => $user->id,
+            ]);
+            
+
+            match (strtoupper($this->currency)) {
+                'RUB' => $balance->increment('balance_rub', $this->amount),
+                'USD' => $balance->increment('balance_usd', $this->amount),
+                'KZT' => $balance->increment('balance_kzt', $this->amount),
+            };
+        }
+    }
 }
