@@ -40,7 +40,6 @@ Route::post('/register', function (Request $request) {
 
         return response()->json(['token' => $token, 'user' => $user]);
     } catch (\Exception $e) {
-        Log::error('User registration failed', ['error' => $e->getMessage()]);
         return response()->json(['message' => 'User registration failed', 'error' => $e->getMessage()], 400);
     }
 });
@@ -62,7 +61,7 @@ Route::post('/login', function (Request $request) {
 
         return response()->json(['token' => $token, 'user' => $user]);
     } catch (\Exception $e) {
-        Log::error('User login failed', ['error' => $e->getMessage()]);
+
         return response()->json(['message' => 'User login failed', 'error' => $e->getMessage()], 400);
     }
 })->name('login');
@@ -89,7 +88,6 @@ try{
     });
 }
 catch (\Exception $e) {
-    Log::error('Route error', ['error' => $e->getMessage()]);
 
     if($e instanceof \Illuminate\Auth\AuthenticationException){
         return response()->json(['message' => 'Unauthorized access'], 401);
